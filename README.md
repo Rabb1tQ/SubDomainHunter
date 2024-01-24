@@ -2,7 +2,7 @@
 Java子域名爆破工具
 
 Usage：
-将PortService放到Jar包所在目录下，后执行java -jar JarName，参数项：
+将SubDic放到Jar包所在目录下，后执行java -jar JarName，参数项：
 
 ```
 Usage: <main class> [options]
