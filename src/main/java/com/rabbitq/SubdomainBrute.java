@@ -4,6 +4,8 @@ import com.beust.jcommander.JCommander;
 import com.rabbitq.entity.TargetOptionsEntity;
 import com.rabbitq.utils.ThreadConf;
 
+import java.util.concurrent.ExecutionException;
+
 public class SubdomainBrute {
 
     public static void main(String[] args) {

@@ -8,18 +8,18 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class ThreadConf {
     public void bruteAction(TargetOptionsEntity targetOptionsEntity) {
+        long start = System.currentTimeMillis();
         String bruteDomain=targetOptionsEntity.getDomain();
         String nameServer=targetOptionsEntity.getNameServer();
         if(nameServer==null||nameServer.equals("")){
             nameServer="8.8.8.8";
         }
-        TCPThread.dnsServer=nameServer;
+        System.setProperty("sun.net.spi.nameservice.nameservers", nameServer);
+        System.setProperty("sun.net.spi.nameservice.provider.1", "dns,sun");
         int numOfThreads=targetOptionsEntity.getNumOfThreads();
         //设置目标地址
         List<String> subDomainList = SubDic(bruteDomain);
@@ -32,17 +32,37 @@ public class ThreadConf {
         List<List<String>> burteSubdomain= averageAssign(subDomainList,numOfThreads);
         ThreadPoolExecutor myExecutor = new ThreadPoolExecutor(numOfThreads, numOfThreads, 200, TimeUnit.SECONDS,
                 new LinkedBlockingDeque<Runnable>());
-        TCPThread.numOfThreads = numOfThreads;
+        TCPThreadCallable.numOfThreads = numOfThreads;
         System.out.println("\033[32m[*]\033[0m存活主机：");
+        TCPThreadCallable workers[] = new TCPThreadCallable[numOfThreads];
+        Future[] futures = new Future[numOfThreads];
         for (int i = 0; i < numOfThreads; i++){
             ArrayList<String> castedList = new ArrayList<>(burteSubdomain.get(i));
-            //String[] array = castedList.toArray(new Integer[castedList.size()]);
             String[] array = castedList.toArray(new String[castedList.size()]);
-            myExecutor.submit(new TCPThread("T" + i, array));
+            workers[i] = new TCPThreadCallable("T" + i, array);
+            futures[i] = myExecutor.submit(workers[i]);
 
+        }
+        for (int i = 0; i < numOfThreads; i++) {
+            try {
+                if(futures[i].get()!=null){
+                    List<String> list= (List<String>) futures[i].get();
+                    for (int j=0;j<list.size();j++){
+                        System.out.println(list.get(j));
+                    }
+                }
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            } catch (ExecutionException ex) {
+                ex.printStackTrace();
+            }
         }
 
         myExecutor.shutdown();
+        long end = System.currentTimeMillis(); // 记录结束时间
+        long duration = end - start; // 计算运行时间（单位为毫秒）
+
+        System.out.println("程序运行时间：" + duration + "ms");
     }
     public List<String> SubDic(String bruteDomain) {
         List<String> subDomainList = new ArrayList<>();
@@ -54,9 +74,9 @@ public class ThreadConf {
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine()+"."+bruteDomain;
                 subDomainList.add(line);
+                count++;
             }
             scanner.close();
-            count++;
         } catch (FileNotFoundException e) {
             System.out.println("\033[31m需复制SubDic文件到当前Jar包所在目录下\033[0m");
             System.exit(0);

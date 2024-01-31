@@ -1,7 +1,10 @@
 # SubDomainBrute
 Java子域名爆破工具
+### 描述
+现经过优化后，预计31297个域名调整好参数后大概在16秒左右能够跑完，效果大概如下图：
+![img.png](img/img.png)
 
-Usage：
+### Usage：
 将PortService放到Jar包所在目录下，后执行java -jar JarName，参数项：
 
 ```
