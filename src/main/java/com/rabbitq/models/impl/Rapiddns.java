@@ -1,5 +1,8 @@
-package com.rabbitq.utils;
+package com.rabbitq.models.impl;
 
+import com.rabbitq.annotations.SubDomainInterfaceImplementation;
+import com.rabbitq.entity.TargetOptionsEntity;
+import com.rabbitq.models.SubDomainInterface;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -8,10 +11,21 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Rapiddns {
-    //https://rapiddns.io/s/baidu.com?page=2
-    public Set<String> getRapidSubDomain(String targetURL) throws IOException {
-        Document document = Jsoup.connect("https://rapiddns.io/subdomain/" + targetURL + "?full=1").get();
+@SubDomainInterfaceImplementation
+public class Rapiddns implements SubDomainInterface {
+
+    @Override
+    public Set<String> getSubDomain(TargetOptionsEntity targetOptionsEntity) {
+        String targetURL=targetOptionsEntity.getDomain();
+        Set<String> setResult =new HashSet<>();
+        Document document = null;
+        try {
+            document = Jsoup.connect("https://rapiddns.io/subdomain/" + targetURL + "?full=1").get();
+            setResult=solvePage(document);
+            System.out.println("\033[32m[*]\033[0m通过Rapiddns接口获取完成" + "，共获取到" + setResult.size() + "子域");
+        } catch (IOException e) {
+            System.out.println("\033[31mrapiddns获取失败，原因：" + e);
+        }
 
 /*
         int intPageSize = Integer.parseInt(document.select(".page-item").get(8).text());
@@ -24,7 +38,8 @@ public class Rapiddns {
             System.out.println("正在请求第" + i + "页");
         }
 */
-        return new HashSet<>(solvePage(document));
+
+        return setResult;
     }
 
     public Set<String> solvePage(Document targetDocument) {

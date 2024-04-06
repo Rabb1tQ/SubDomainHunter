@@ -1,27 +1,33 @@
-package com.rabbitq.utils;
+package com.rabbitq.models.impl;
 
+import com.rabbitq.annotations.SubDomainInterfaceImplementation;
+import com.rabbitq.entity.TargetOptionsEntity;
+import com.rabbitq.models.SubDomainInterface;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.util.HashSet;
 import java.util.Set;
 
-public class SiteDossier {
+@SubDomainInterfaceImplementation
+public class SiteDossier implements SubDomainInterface {
 
-    public Set<String> getSiteDossierSubDomain(String targetURL){
-        Set<String> setResult= null;
+    @Override
+    public Set<String> getSubDomain(TargetOptionsEntity targetOptionsEntity){
+        String targetURL=targetOptionsEntity.getDomain();
+        Set<String> setResult =new HashSet<>();
         try {
-            setResult = getSubDomain("http://www.sitedossier.com/parentdomain/"+targetURL);
+            setResult = getSiteDossierSubDomain("http://www.sitedossier.com/parentdomain/"+targetURL);
+            System.out.println("\033[32m[*]\033[0m通过sitedossier接口获取完成" + "，共获取到" + setResult.size() + "子域");
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
+            System.out.println("\033[31msitedossier获取失败，原因：" + e);
         }
+
         return setResult;
     }
 
-    public Set<String> getSubDomain(String targetURL) throws IOException, InterruptedException {
+    public Set<String> getSiteDossierSubDomain(String targetURL) throws IOException, InterruptedException {
         Set<String> setResult = new HashSet<>();
 //        String proxyHost = "192.168.131.1";
 //        int proxyPort = 7890;
@@ -48,7 +54,7 @@ public class SiteDossier {
         if(!doc.select("ol+a").isEmpty()){
             Thread.sleep(3000);
             String nextTargetURL="http://www.sitedossier.com"+doc.select("ol+a").attr("href");
-            setResult.addAll(getSubDomain(nextTargetURL));
+            setResult.addAll(getSiteDossierSubDomain(nextTargetURL));
 
         }
 
