@@ -1,8 +1,5 @@
 package com.rabbitq.models.impl;
 
-import cn.hutool.http.HttpRequest;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.rabbitq.annotations.SubDomainInterfaceImplementation;
 import com.rabbitq.entity.TargetOptionsEntity;
 import com.rabbitq.models.SubDomainInterface;
@@ -12,9 +9,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import javax.net.ssl.*;
 import java.io.IOException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -25,7 +19,6 @@ public class DomainGlass implements SubDomainInterface {
     public Set<String> getSubDomain(TargetOptionsEntity targetOptionsEntity) throws Exception {
         String targetURL=targetOptionsEntity.getDomain();
         Set<String> setResult =new HashSet<>();
-        Document document = null;
         try {
 
             // 信任所有证书的代码
@@ -52,11 +45,11 @@ public class DomainGlass implements SubDomainInterface {
                 }
             });
 
-            document = Jsoup.connect("https://domain.glass/" + targetURL).get();
+            Document document = Jsoup.connect("https://domain.glass/" + targetURL).get();
             setResult=solvePage(document);
             System.out.println("\033[32m[*]\033[0m通过DomainGlass接口获取完成" + "，共获取到" + setResult.size() + "子域");
         } catch (IOException e) {
-            System.out.println("\033[31mDomainGlass获取失败，原因：" + e);
+            System.out.println("\033[31mDomainGlass接口获取失败，原因：" + e);
         }
 
 

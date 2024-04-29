@@ -1,16 +1,13 @@
 package com.rabbitq.models.impl;
 
 import cn.hutool.http.HttpRequest;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.rabbitq.annotations.SubDomainInterfaceImplementation;
 import com.rabbitq.entity.TargetOptionsEntity;
 import com.rabbitq.models.SubDomainInterface;
 
 import javax.net.ssl.*;
-import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.HashSet;
@@ -68,7 +65,7 @@ public class AlienVault implements SubDomainInterface {
             System.out.println("\033[32m[*]\033[0m通过AlienVaul接口获取完成" + "，共获取到" + setResult.size() + "子域");
         }
         catch (Exception e){
-            System.out.println("\033[31msitedossier获取失败，原因：" + e);
+            System.out.println("\033[31mAlienVaul接口获取失败，原因：" + e);
         }
 
         return setResult;

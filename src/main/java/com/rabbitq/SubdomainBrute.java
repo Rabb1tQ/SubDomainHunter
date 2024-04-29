@@ -42,7 +42,7 @@ public class SubdomainBrute {
         for (SubDomainInterface impl : implementations) {
             try {
                 setSubDomain.addAll(impl.getSubDomain(targetOptionsEntity));
-                System.out.println(impl.getClass().getName());
+                //System.out.println(impl.getClass().getName());
             } catch (Exception e) {
                 // 捕捉子类方法执行的异常
                 System.out.println("Exception in calling method: " + e.getMessage());

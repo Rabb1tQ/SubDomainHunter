@@ -5,7 +5,6 @@ import com.rabbitq.annotations.SubDomainInterfaceImplementation;
 import com.rabbitq.entity.TargetOptionsEntity;
 import com.rabbitq.models.SubDomainInterface;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -34,7 +33,7 @@ public class Anubis implements SubDomainInterface {
             setResult=Arrays.stream(arrResult).collect(Collectors.toSet());
             System.out.println("\033[32m[*]\033[0m通过anubis接口获取完成" + "，共获取到" + setResult.size() + "子域");
         }catch (Exception e){
-            System.out.println("\033[31msitedossier获取失败，原因：" + e);
+            System.out.println("\033[31manubis接口获取失败，原因：" + e);
         }
 
         return setResult;
