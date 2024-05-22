@@ -45,7 +45,8 @@ public class SubdomainBrute {
                 //System.out.println(impl.getClass().getName());
             } catch (Exception e) {
                 // 捕捉子类方法执行的异常
-                System.out.println("Exception in calling method: " + e.getMessage());
+                System.out.println("Exception in calling method : "+impl.getClass().getName());
+                System.out.println("具体异常："+e.getMessage());
             }
         }
 

@@ -17,18 +17,24 @@ import java.util.concurrent.*;
 public class ThreadBrute implements SubDomainInterface {
     @Override
     public Set<String> getSubDomain(TargetOptionsEntity targetOptionsEntity) {
+        String strBruteDomain = targetOptionsEntity.getDomain();
+        //泛解析识别
+        if (wildcardDomain(strBruteDomain)) {
+            System.out.println("\033[31m未进行枚举子域失败，原因：泛解析");
+            return Collections.emptySet();
+        }
         ConcurrentSkipListSet<String> setSubDomain = new ConcurrentSkipListSet<>();
         try {
-            String bruteDomain = targetOptionsEntity.getDomain();
+
             String nameServer = targetOptionsEntity.getNameServer();
             if (nameServer == null || nameServer.equals("")) {
-                nameServer = "223.5.5.5";
+                nameServer = "8.8.8.8";
             }
             System.setProperty("sun.net.spi.nameservice.nameservers", nameServer);
             System.setProperty("sun.net.spi.nameservice.provider.1", "dns,sun");
             int numOfThreads = targetOptionsEntity.getNumOfThreads();
             //设置目标地址
-            List<String> subDomainList = SubDic(bruteDomain);
+            List<String> subDomainList = SubDic(strBruteDomain);
 
             System.out.println("\033[32m[*]\033[m最大启动线程数为" + numOfThreads);
             int subDomainSize = subDomainList.size();
@@ -37,7 +43,7 @@ public class ThreadBrute implements SubDomainInterface {
             }
             List<List<String>> burteSubdomain = averageAssign(subDomainList, numOfThreads);
             ThreadPoolExecutor myExecutor = new ThreadPoolExecutor(numOfThreads, numOfThreads, 200, TimeUnit.SECONDS,
-                    new LinkedBlockingDeque<Runnable>());
+                    new LinkedBlockingDeque<>());
 
             ConcurrentHashMap<String, Boolean> resultsMap = new ConcurrentHashMap<>();
 
@@ -67,6 +73,21 @@ public class ThreadBrute implements SubDomainInterface {
 
 
         return setSubDomain;
+    }
+
+    public boolean wildcardDomain(String strBruteDomain) {
+        boolean result = false;
+        UUID uuid = UUID.randomUUID();
+        String strTarget = uuid.toString() + "." + strBruteDomain;
+        try {
+            InetAddress address = InetAddress.getByName(strTarget);
+            result = true;
+
+        } catch (UnknownHostException e) {
+            // Host not reachable
+            result = false;
+        }
+        return result;
     }
 
     public List<String> SubDic(String bruteDomain) {
