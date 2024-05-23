@@ -18,7 +18,6 @@ public class SubdomainBrute {
 
     public static void main(String[] args) {
         printBanner();
-
         TargetOptionsEntity targetOptionsEntity = new TargetOptionsEntity();
         JCommander commander = JCommander.newBuilder()
                 .addObject(targetOptionsEntity)
