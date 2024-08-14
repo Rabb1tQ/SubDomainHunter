@@ -13,6 +13,9 @@ Java子域名爆破工具
 * Anubis
 * Rapiddns
 * SiteDossier
+* DomainGlass
+* Rapiddns
+* VirusTotal
 
 ## 使用方法：
 
