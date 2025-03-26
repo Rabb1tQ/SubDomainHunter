@@ -10,24 +10,26 @@ import com.alibaba.fastjson2.JSONObject;
 import com.rabbitq.entity.TargetOptionsEntity;
 import com.rabbitq.models.SubDomainInterface;
 import com.rabbitq.annotations.SubDomainInterfaceImplementation;
+import com.rabbitq.util.PrintUtils;
 
 @SubDomainInterfaceImplementation
 public class CrtShSubDomain implements SubDomainInterface {
     @Override
     public Set<String> getSubDomain(TargetOptionsEntity targetOptionsEntity) {
         Set<String> subDomains = new HashSet<>();
+        String source="证书透明度crt.sh";
         String domain = targetOptionsEntity.getDomain();
+        String strAPI = "https://crt.sh/?q=" + domain + "&output=json";
+        String result1="";
         try {
-            String strAPI = "https://crt.sh/?q=" + domain + "&output=json";
-            String result1= HttpRequest.get(strAPI).execute().body();
+
+            result1=HttpRequest.get(strAPI).execute().body();
             JSONArray jsonArray=JSONArray.parseArray(result1);
             if (jsonArray == null || jsonArray.isEmpty()) {
-                System.out.println("解析结果为空");
+                PrintUtils.error("证书透明度获取失败，解析结果为空");
                 return Collections.emptySet();
             }
 
-            // 3. 存储子域名的集合（去重）
-            Set<String> subdomains = new HashSet<>();
 
             for (int i=0;i<jsonArray.size();i++) {
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -43,22 +45,23 @@ public class CrtShSubDomain implements SubDomainInterface {
                             String cleanedDomain = domainName.replaceFirst("^\\*\\.", "");
                             // 只收集与目标域名相关的域名
                             if (cleanedDomain.endsWith("." + domain) || cleanedDomain.equals(domain)) {
-                                subdomains.add(cleanedDomain);
+                                subDomains.add(cleanedDomain);
                             }
                         } else {
                             // 非通配符域名，直接判断
                             if (domainName.endsWith("." + domain) || domainName.equals(domain)) {
-                                subdomains.add(domainName);
+                                subDomains.add(domainName);
                             }
                         }
                     }
                 }
             }
 
-            System.out.println("找到的子域名数量: " + subdomains.size());
+            PrintUtils.sucess(source,subDomains.size());
 
         } catch (Exception e) {
-            System.err.println("Error while fetching from crt.sh: " + e.getMessage());
+            PrintUtils.error(source, e.getMessage(),subDomains);
+            System.out.println();
         }
         return subDomains;
     }

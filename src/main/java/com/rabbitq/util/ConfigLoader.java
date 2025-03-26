@@ -12,7 +12,7 @@ import java.util.Map;
 public enum ConfigLoader {
     INSTANCE;
 
-    private Map<String, Object> mapConfigEntity;
+    private Map<String, Object> mapConfigEntity=new HashMap<>();
 
     private ConfigLoader() {
         Yaml yaml = new Yaml();
@@ -20,7 +20,7 @@ public enum ConfigLoader {
             FileInputStream inputStream = new FileInputStream(new File("config.yaml"));
             this.mapConfigEntity = yaml.load(inputStream);
         } catch (IOException e) {
-            System.out.println("\033[31m配置文件读取失败，需账户的API接口将无法使用：" + e);
+            PrintUtils.error("配置文件读取失败，需账户的API接口将无法使用：" + e);
         }
 
     }

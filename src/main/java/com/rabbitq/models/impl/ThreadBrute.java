@@ -4,6 +4,7 @@ package com.rabbitq.models.impl;
 import com.rabbitq.annotations.SubDomainInterfaceImplementation;
 import com.rabbitq.entity.TargetOptionsEntity;
 import com.rabbitq.models.SubDomainInterface;
+import com.rabbitq.util.PrintUtils;
 import me.tongfei.progressbar.ProgressBar;
 
 import java.io.File;
@@ -18,34 +19,38 @@ public class ThreadBrute implements SubDomainInterface {
     @Override
     public Set<String> getSubDomain(TargetOptionsEntity targetOptionsEntity) {
         String strBruteDomain = targetOptionsEntity.getDomain();
+        String source = "ThreadBrute";
+        String nameServer = targetOptionsEntity.getNameServer();
+        int numOfThreads = targetOptionsEntity.getNumOfThreads();
+        //设置目标地址
+        List<String> subDomainList = SubDic(strBruteDomain);
+
+        List<List<String>> burteSubdomain = averageAssign(subDomainList, numOfThreads);
+
+
         //泛解析识别
         if (wildcardDomain(strBruteDomain)) {
-            System.out.println("\033[31m未进行枚举子域失败，原因：泛解析");
+            PrintUtils.error("未进行枚举子域失败，原因：泛解析");
             return Collections.emptySet();
         }
-        ConcurrentSkipListSet<String> setSubDomain = new ConcurrentSkipListSet<>();
+        ConcurrentSkipListSet<String> subDomains = new ConcurrentSkipListSet<>();
         try {
 
-            String nameServer = targetOptionsEntity.getNameServer();
-            if (nameServer == null || nameServer.equals("")) {
+
+            if (nameServer == null || nameServer.isEmpty()) {
                 nameServer = "8.8.8.8";
             }
             System.setProperty("sun.net.spi.nameservice.nameservers", nameServer);
             System.setProperty("sun.net.spi.nameservice.provider.1", "dns,sun");
-            int numOfThreads = targetOptionsEntity.getNumOfThreads();
-            //设置目标地址
-            List<String> subDomainList = SubDic(strBruteDomain);
 
             System.out.println("\033[32m[*]\033[m最大启动线程数为" + numOfThreads);
             int subDomainSize = subDomainList.size();
             if (subDomainSize < numOfThreads) {
                 numOfThreads = subDomainSize;
             }
-            List<List<String>> burteSubdomain = averageAssign(subDomainList, numOfThreads);
+
             ThreadPoolExecutor myExecutor = new ThreadPoolExecutor(numOfThreads, numOfThreads, 200, TimeUnit.SECONDS,
                     new LinkedBlockingDeque<>());
-
-            ConcurrentHashMap<String, Boolean> resultsMap = new ConcurrentHashMap<>();
 
             System.out.println("\033[32m[*]\033[0m存活主机：");
             ProgressBar pb = new ProgressBar("爆破进度：", subDomainList.size());
@@ -54,7 +59,7 @@ public class ThreadBrute implements SubDomainInterface {
                     for (String domain : subDomain) {
                         try {
                             InetAddress address = InetAddress.getByName(domain);
-                            setSubDomain.add(domain);
+                            subDomains.add(domain);
                         } catch (UnknownHostException e) {
                             // Host not reachable
                         }
@@ -66,26 +71,24 @@ public class ThreadBrute implements SubDomainInterface {
             myExecutor.shutdown();
             myExecutor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
             pb.close();
-            System.out.println("\033[32m[*]\033[0m爆破已完成，共获取到" + setSubDomain.size() + "子域");
+            System.out.println("\033[32m[*]\033[0m爆破已完成，共获取到" + subDomains.size() + "子域");
         } catch (Exception e) {
-            System.out.println("\033[31m枚举子域失败，原因：" + e);
+            PrintUtils.error(source, e.getMessage(), subDomains);
         }
 
 
-        return setSubDomain;
+        return subDomains;
     }
 
     public boolean wildcardDomain(String strBruteDomain) {
         boolean result = false;
         UUID uuid = UUID.randomUUID();
-        String strTarget = uuid.toString() + "." + strBruteDomain;
+        String strTarget = uuid + "." + strBruteDomain;
         try {
             InetAddress address = InetAddress.getByName(strTarget);
             result = true;
 
-        } catch (UnknownHostException e) {
-            // Host not reachable
-            result = false;
+        } catch (UnknownHostException ignored) {
         }
         return result;
     }
@@ -93,7 +96,7 @@ public class ThreadBrute implements SubDomainInterface {
     public List<String> SubDic(String bruteDomain) {
         List<String> subDomainList = new ArrayList<>();
         File file = new File(System.getProperty("user.dir") + "/SubDic");
-        Scanner scanner = null;
+        Scanner scanner;
         int count = 0;
         try {
             scanner = new Scanner(file);
@@ -104,21 +107,20 @@ public class ThreadBrute implements SubDomainInterface {
             }
             scanner.close();
         } catch (FileNotFoundException e) {
-            System.out.println("\033[31m需复制SubDic文件到当前Jar包所在目录下\033[0m");
+            PrintUtils.error("需复制SubDic文件到当前Jar包所在目录下");
             System.exit(0);
         }
-        System.out.println("\033[32m[*]\033[m读取SubDic文件成功，共读取到" + count + "个域名");
-        //System.out.println("读取SubDic文件成功，共读取到"+count+"个域名");
+        PrintUtils.sucess("读取SubDic文件成功，共读取到" + count + "个域名");
         return subDomainList;
     }
 
     public static <T> List<List<T>> averageAssign(List<T> source, int n) {
-        List<List<T>> result = new ArrayList<List<T>>();
+        List<List<T>> result = new ArrayList<>();
         int remaider = source.size() % n;  //(先计算出余数)
         int number = source.size() / n;  //然后是商
         int offset = 0;//偏移量
         for (int i = 0; i < n; i++) {
-            List<T> value = null;
+            List<T> value;
             if (remaider > 0) {
                 value = source.subList(i * number + offset, (i + 1) * number + offset + 1);
                 remaider--;

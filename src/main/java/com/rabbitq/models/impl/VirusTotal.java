@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.rabbitq.annotations.SubDomainInterfaceImplementation;
 import com.rabbitq.entity.TargetOptionsEntity;
 import com.rabbitq.models.SubDomainInterface;
+import com.rabbitq.util.PrintUtils;
 
 import java.util.*;
 
@@ -15,37 +16,42 @@ public class VirusTotal implements SubDomainInterface {
     @Override
     public Set<String> getSubDomain(TargetOptionsEntity targetOptionsEntity) {
         String strVirusTotalKey;
-        if (globalConfig != null) {
-            Object objVirusTotalKey = globalConfig.get("VirusTotal");
-            if (objVirusTotalKey == null || ((String) objVirusTotalKey).isEmpty()) {
-                return Collections.emptySet();
-            } else {
-                strVirusTotalKey = (String) objVirusTotalKey;
-            }
+        Set<String> subDomains = new HashSet<>();
+        String source = "VirusTotal";
+        String targetURL = targetOptionsEntity.getDomain();
+
+        Object objVirusTotalKey = globalConfig.get("VirusTotal");
+        if (objVirusTotalKey == null || ((String) objVirusTotalKey).isEmpty()) {
+            PrintUtils.error("未找到VirusTotal API秘钥");
+            return subDomains;
         } else {
-            return Collections.emptySet();
+            strVirusTotalKey = (String) objVirusTotalKey;
         }
-        Set<String> setResult = new HashSet<>();
+
+        String strAPI = "https://www.virustotal.com/vtapi/v2/domain/report?domain=" + targetURL + "&apikey=" + strVirusTotalKey;
+
+
         try {
-            String targetURL = targetOptionsEntity.getDomain();
-            String strAPI = "https://www.virustotal.com/vtapi/v2/domain/report?domain=" + targetURL + "&apikey=" + strVirusTotalKey;
+
             String result = HttpRequest.get(strAPI).execute().body();
             JSONObject jsonObject = JSONObject.parseObject(result);
             if (jsonObject != null) {
                 if (jsonObject.get("domain_siblings") != null) {
                     List<String> arrayDomainSiblings = (List<String>) jsonObject.get("domain_siblings");
-                    setResult.addAll(arrayDomainSiblings);
+                    subDomains.addAll(arrayDomainSiblings);
                 }
                 if (jsonObject.get("subdomains") != null) {
                     List<String> arrayDomainSiblings = (List<String>) jsonObject.get("subdomains");
-                    setResult.addAll(arrayDomainSiblings);
+                    subDomains.addAll(arrayDomainSiblings);
                 }
             }
-            System.out.println("\033[32m[*]\033[0m通过VirusTotal接口获取完成" + "，共获取到" + setResult.size() + "子域");
+            PrintUtils.sucess(source, subDomains.size());
+
         } catch (Exception e) {
-            System.out.println("\033[31mVirusTotal接口获取失败，原因：" + e);
+            PrintUtils.error(source, e.getMessage(), subDomains);
+
         }
-        return setResult;
+        return subDomains;
     }
 }
 

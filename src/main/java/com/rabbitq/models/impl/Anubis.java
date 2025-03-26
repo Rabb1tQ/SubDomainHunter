@@ -4,6 +4,7 @@ import cn.hutool.http.HttpRequest;
 import com.rabbitq.annotations.SubDomainInterfaceImplementation;
 import com.rabbitq.entity.TargetOptionsEntity;
 import com.rabbitq.models.SubDomainInterface;
+import com.rabbitq.util.PrintUtils;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -15,28 +16,22 @@ public class Anubis implements SubDomainInterface {
 
     @Override
     public Set<String> getSubDomain(TargetOptionsEntity targetOptionsEntity) {
-        Set<String> setResult=new HashSet<>();
+        Set<String> subDomains=new HashSet<>();
+        String source="Anubis";
+        String targetURL=targetOptionsEntity.getDomain();
+        String strAPI = "https://jldc.me/anubis/subdomains/";
+
         try {
-            String targetURL=targetOptionsEntity.getDomain();
-//        String proxyHost = "192.168.131.1";
-//        int proxyPort = 7890;
-//
-//        // 创建代理服务器对象
-//        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
-
-//        String result1= HttpRequest.get(strAPI).setProxy(proxy).execute().body();
-            String strAPI = "https://jonlu.ca/anubis/subdomains/";
-
             String result1 = HttpRequest.get(strAPI + targetURL).execute().body();
             result1=result1.replaceAll("\"","");
             String[] arrResult = result1.substring(1, result1.length() - 1).split(",");
-            setResult=Arrays.stream(arrResult).collect(Collectors.toSet());
-            System.out.println("\033[32m[*]\033[0m通过anubis接口获取完成" + "，共获取到" + setResult.size() + "子域");
+            subDomains=Arrays.stream(arrResult).collect(Collectors.toSet());
+            PrintUtils.sucess(source,subDomains.size());
         }catch (Exception e){
-            System.out.println("\033[31manubis接口获取失败，原因：" + e);
+            PrintUtils.error(source, e.getMessage(),subDomains);
         }
 
-        return setResult;
+        return subDomains;
     }
 
 }
