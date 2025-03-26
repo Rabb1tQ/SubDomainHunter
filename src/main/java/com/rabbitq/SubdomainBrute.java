@@ -4,6 +4,7 @@ import cn.hutool.core.io.FileUtil;
 import com.beust.jcommander.JCommander;
 import com.rabbitq.entity.TargetOptionsEntity;
 import com.rabbitq.models.SubDomainInterface;
+import com.rabbitq.util.PrintUtils;
 import com.rabbitq.util.SubDoaminClassScanner;
 
 import java.io.File;
@@ -61,7 +62,8 @@ public class SubdomainBrute {
         fileName += ".txt";
         String filePath=System.getProperty("user.dir")+"/"+fileName;
         FileUtil.writeLines(setSubDomain, new File(filePath), "UTF-8");
-        System.out.println("\033[32m[*]\033[0m已将结果写入文件："+filePath);
+        PrintUtils.sucess("已完成任务，共收集"+setSubDomain.size()+"个子域名");
+        PrintUtils.sucess("已将结果写入文件："+filePath);
     }
 
 
